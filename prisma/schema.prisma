@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  groups   Group[]
+  policies Policy[]
+}
+
+model User {
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  passwordHash   String
+  isRoot         Boolean  @default(false)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization  Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+  groups        UserGroupMembership[]
+  policies      UserPolicyAttachment[]
+  boundary      UserBoundary?
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Group {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  users    UserGroupMembership[]
+  policies GroupPolicyAttachment[]
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+}
+
+enum PolicyType {
+  MANAGED
+  INLINE
+}
+
+enum Effect {
+  ALLOW
+  DENY
+}
+
+model Policy {
+  id             String     @id @default(uuid())
+  name           String
+  description    String?
+  type           PolicyType
+  organizationId String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  statements PolicyStatement[]
+
+  userAttachments  UserPolicyAttachment[]
+  groupAttachments GroupPolicyAttachment[]
+  boundaryUsers    UserBoundary[]
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+  @@index([type])
+}
+
+model PolicyStatement {
+  id        String   @id @default(uuid())
+  policyId  String
+  effect    Effect
+  actions   String[] // e.g. ["user:create", "user:read"]
+  resource  String   // e.g. "*"
+
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([policyId])
+}
+
+model UserGroupMembership {
+  userId  String
+  groupId String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+}
+
+model UserPolicyAttachment {
+  userId   String
+  policyId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, policyId])
+  @@index([userId])
+  @@index([policyId])
+}
+
+model GroupPolicyAttachment {
+  groupId  String
+  policyId String
+
+  group  Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, policyId])
+  @@index([groupId])
+  @@index([policyId])
+}
+
+model UserBoundary {
+  userId   String @id
+  policyId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([policyId])
+}
