@@ -1,11 +1,16 @@
 import { Request, Response } from 'express';
 import { alertsService } from './alerts.service';
+import { getPaginationParams, formatPaginatedResponse } from '../../../shared/utils/pagination';
 
 export const alertsController = {
   async list(req: Request, res: Response) {
     const { orgId: organizationId } = req.user!;
-    const alerts = await alertsService.listAlerts(organizationId);
-    res.json({ success: true, data: alerts });
+    const params = getPaginationParams(req.query);
+    const { totalItems, alerts } = await alertsService.listAlerts(organizationId, params);
+    res.json({ 
+      success: true, 
+      ...formatPaginatedResponse(alerts, totalItems, params.page, params.limit)
+    });
   },
 
   async get(req: Request, res: Response) {

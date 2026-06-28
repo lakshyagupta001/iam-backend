@@ -2,8 +2,13 @@ import { AppError } from '../../../shared/utils/AppError';
 import { reportsRepository } from './reports.repository';
 
 export const reportsService = {
-  async listReports(organizationId: string) {
-    return reportsRepository.findMany(organizationId);
+  async listReports(organizationId: string, params: { page: number; limit: number; search?: string }) {
+    const { page, limit, search } = params;
+    const [totalItems, reports] = await Promise.all([
+      reportsRepository.count(organizationId, search),
+      reportsRepository.findMany(organizationId, (page - 1) * limit, limit, search)
+    ]);
+    return { totalItems, reports };
   },
 
   async getReport(organizationId: string, id: string) {

@@ -1,11 +1,16 @@
 import { Request, Response } from 'express';
 import { reportsService } from './reports.service';
+import { getPaginationParams, formatPaginatedResponse } from '../../../shared/utils/pagination';
 
 export const reportsController = {
   async list(req: Request, res: Response) {
     const { orgId: organizationId } = req.user!;
-    const reports = await reportsService.listReports(organizationId);
-    res.json({ success: true, data: reports });
+    const params = getPaginationParams(req.query);
+    const { totalItems, reports } = await reportsService.listReports(organizationId, params);
+    res.json({ 
+      success: true, 
+      ...formatPaginatedResponse(reports, totalItems, params.page, params.limit)
+    });
   },
 
   async get(req: Request, res: Response) {

@@ -2,8 +2,13 @@ import { AppError } from '../../../shared/utils/AppError';
 import { alertsRepository } from './alerts.repository';
 
 export const alertsService = {
-  async listAlerts(organizationId: string) {
-    return alertsRepository.findMany(organizationId);
+  async listAlerts(organizationId: string, params: { page: number; limit: number; search?: string }) {
+    const { page, limit, search } = params;
+    const [totalItems, alerts] = await Promise.all([
+      alertsRepository.count(organizationId, search),
+      alertsRepository.findMany(organizationId, (page - 1) * limit, limit, search)
+    ]);
+    return { totalItems, alerts };
   },
 
   async getAlert(organizationId: string, id: string) {

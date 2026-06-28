@@ -2,11 +2,31 @@ import { prisma } from '../../../prisma/client';
 import { Prisma } from '@prisma/client';
 
 export const reportsRepository = {
-  async findMany(organizationId: string) {
+  async findMany(organizationId: string, skip: number, take: number, search?: string) {
+    const whereClause: Prisma.ReportWhereInput = { organizationId };
+    if (search) {
+      whereClause.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
     return prisma.report.findMany({
-      where: { organizationId },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
+      skip,
+      take,
     });
+  },
+
+  async count(organizationId: string, search?: string) {
+    const whereClause: Prisma.ReportWhereInput = { organizationId };
+    if (search) {
+      whereClause.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    return prisma.report.count({ where: whereClause });
   },
 
   async findUnique(id: string, organizationId: string) {
