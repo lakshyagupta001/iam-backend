@@ -5,10 +5,14 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { env } from './shared/config/env';
 import { errorHandler } from './shared/middleware/errorHandler.middleware';
-import { authRoutes } from './modules/auth/auth.routes';
-import { usersRoutes } from './modules/users/users.routes';
-import { groupRoutes } from './modules/group/group.routes';
-import { policyRoutes } from './modules/policy/policy.routes';
+import { authRoutes } from './modules/iam/auth/auth.routes';
+import { usersRoutes } from './modules/iam/users/users.routes';
+import { groupRoutes } from './modules/iam/groups/groups.routes';
+import { policyRoutes } from './modules/iam/policies/policies.routes';
+import { reportsRoutes } from './modules/resources/reports/reports.routes';
+import { alertsRoutes } from './modules/resources/alerts/alerts.routes';
+import { settingsRoutes } from './modules/resources/settings/settings.routes';
+import { auditRoutes } from './modules/resources/audit/audit.routes';
 
 const app = express();
 
@@ -36,6 +40,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/iam/users', usersRoutes);
 app.use('/api/iam/groups', groupRoutes);
 app.use('/api/iam/policies', policyRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/alerts', alertsRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/audit', auditRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

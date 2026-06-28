@@ -13,9 +13,13 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users    User[]
-  groups   Group[]
-  policies Policy[]
+  users       User[]
+  groups      Group[]
+  policies    Policy[]
+  reports     Report[]
+  alerts      Alert[]
+  settings    Setting[]
+  auditLogs   AuditLog[]
 }
 
 model User {
@@ -153,4 +157,51 @@ model UserBoundary {
   policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
 
   @@index([policyId])
+}
+
+model Report {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?
+  status         String
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@index([organizationId])
+}
+
+model Alert {
+  id             String   @id @default(uuid())
+  title          String
+  message        String
+  severity       String
+  organizationId String
+  createdAt      DateTime @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@index([organizationId])
+}
+
+model Setting {
+  id             String   @id @default(uuid())
+  key            String
+  value          String
+  organizationId String
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@unique([key, organizationId])
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  action         String
+  performedBy    String
+  organizationId String
+  timestamp      DateTime @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@index([organizationId])
 }
