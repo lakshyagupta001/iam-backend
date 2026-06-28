@@ -14,12 +14,25 @@ class GroupController {
     const query = groupQuerySchema.parse(req.query) as GroupQueryDto;
 
     const result = await groupService.listGroups(req.user!.orgId, query);
-    res.status(200).json({ success: true, data: result.groups, meta: { total: result.total, page: query.page || 1, limit: query.limit || 10 } });
+    const { formatPaginatedResponse } = require('../../shared/utils/pagination');
+    
+    res.status(200).json({
+      success: true,
+      ...formatPaginatedResponse(result.groups, result.total, query.page || 1, query.limit || 10)
+    });
   }
 
   async getGroup(req: Request, res: Response): Promise<void> {
     const group = await groupService.getGroupById(req.params.id as string, req.user!.orgId);
-    res.status(200).json({ success: true, data: group });
+    
+    // Map to the format the frontend expects
+    const mappedGroup = {
+      ...group,
+      memberships: (group as any).users,
+      policyAttachments: (group as any).policies,
+    };
+
+    res.status(200).json({ success: true, data: mappedGroup });
   }
 
   async updateGroup(req: Request, res: Response): Promise<void> {

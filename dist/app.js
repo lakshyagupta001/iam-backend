@@ -12,6 +12,8 @@ const env_1 = require("./shared/config/env");
 const errorHandler_middleware_1 = require("./shared/middleware/errorHandler.middleware");
 const auth_routes_1 = require("./modules/auth/auth.routes");
 const users_routes_1 = require("./modules/users/users.routes");
+const group_routes_1 = require("./modules/group/group.routes");
+const policy_routes_1 = require("./modules/policy/policy.routes");
 const app = (0, express_1.default)();
 // Security Middlewares
 app.use((0, helmet_1.default)());
@@ -31,7 +33,9 @@ const limiter = (0, express_rate_limit_1.default)({
 app.use(limiter);
 // Routes
 app.use('/api/auth', auth_routes_1.authRoutes);
-app.use('/api/users', users_routes_1.usersRoutes);
+app.use('/api/iam/users', users_routes_1.usersRoutes);
+app.use('/api/iam/groups', group_routes_1.groupRoutes);
+app.use('/api/iam/policies', policy_routes_1.policyRoutes);
 // Health check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', env: env_1.env.NODE_ENV });

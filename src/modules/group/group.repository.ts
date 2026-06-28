@@ -25,6 +25,18 @@ export class GroupRepository {
         id,
         organizationId,
       },
+      include: {
+        users: {
+          include: {
+            user: true,
+          },
+        },
+        policies: {
+          include: {
+            policy: true,
+          },
+        },
+      },
     });
   }
 

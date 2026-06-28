@@ -5,19 +5,37 @@ import { z } from 'zod';
 import { createUserSchema } from './users.validation';
 
 class UsersService {
-  async listUsers(orgId: string) {
-    return prisma.user.findMany({
-      where: { organizationId: orgId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        isRoot: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+  async listUsers(orgId: string, params: { page: number; limit: number; search?: string }) {
+    const { page, limit, search } = params;
+    
+    const whereClause: any = { organizationId: orgId };
+    
+    if (search) {
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [totalItems, users] = await Promise.all([
+      prisma.user.count({ where: whereClause }),
+      prisma.user.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          isRoot: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    ]);
+
+    return { totalItems, users };
   }
 
   async createUser(orgId: string, data: z.infer<typeof createUserSchema>) {
@@ -49,6 +67,51 @@ class UsersService {
     });
 
     return user;
+  }
+
+  async getUserById(userId: string, orgId: string) {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        organizationId: orgId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isRoot: true,
+        createdAt: true,
+        groups: {
+          include: {
+            group: {
+              include: {
+                policies: {
+                  include: {
+                    policy: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        policies: {
+          include: {
+            policy: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    // Map the response to match what the frontend expects (memberships, directPolicies)
+    return {
+      ...user,
+      groupMemberships: user.groups,
+      directPolicies: user.policies,
+    };
   }
 
   async attachPolicy(userId: string, policyId: string, orgId: string): Promise<void> {

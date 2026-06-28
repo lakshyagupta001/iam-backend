@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.groupRoutes = void 0;
+const express_1 = require("express");
+const express_async_handler_1 = __importDefault(require("express-async-handler"));
+const group_controller_1 = require("./group.controller");
+const validate_middleware_1 = require("../../shared/middleware/validate.middleware");
+const auth_middleware_1 = require("../../shared/middleware/auth.middleware");
+const rbac_middleware_1 = require("../../shared/middleware/rbac.middleware");
+const group_validation_1 = require("./group.validation");
+exports.groupRoutes = (0, express_1.Router)();
+exports.groupRoutes.use(auth_middleware_1.authMiddleware);
+exports.groupRoutes.post('/', rbac_middleware_1.requireRoot, (0, validate_middleware_1.validate)(group_validation_1.createGroupSchema), (0, express_async_handler_1.default)(group_controller_1.groupController.createGroup));
+exports.groupRoutes.get('/', (0, validate_middleware_1.validate)(group_validation_1.groupQuerySchema, 'query'), (0, express_async_handler_1.default)(group_controller_1.groupController.listGroups));
+exports.groupRoutes.get('/:id', (0, validate_middleware_1.validate)(group_validation_1.idParamSchema, 'params'), (0, express_async_handler_1.default)(group_controller_1.groupController.getGroup));
+exports.groupRoutes.put('/:id', rbac_middleware_1.requireRoot, (0, validate_middleware_1.validate)(group_validation_1.idParamSchema, 'params'), (0, validate_middleware_1.validate)(group_validation_1.updateGroupSchema), (0, express_async_handler_1.default)(group_controller_1.groupController.updateGroup));
+exports.groupRoutes.delete('/:id', rbac_middleware_1.requireRoot, (0, validate_middleware_1.validate)(group_validation_1.idParamSchema, 'params'), (0, express_async_handler_1.default)(group_controller_1.groupController.deleteGroup));
+exports.groupRoutes.post('/:id/members', rbac_middleware_1.requireRoot, (0, validate_middleware_1.validate)(group_validation_1.idParamSchema, 'params'), (0, validate_middleware_1.validate)(group_validation_1.addMemberSchema), (0, express_async_handler_1.default)(group_controller_1.groupController.addMember));
+exports.groupRoutes.delete('/:id/members/:userId', rbac_middleware_1.requireRoot, (0, validate_middleware_1.validate)(group_validation_1.groupUserParamSchema, 'params'), (0, express_async_handler_1.default)(group_controller_1.groupController.removeMember));
+exports.groupRoutes.post('/:id/policies', rbac_middleware_1.requireRoot, (0, validate_middleware_1.validate)(group_validation_1.idParamSchema, 'params'), (0, validate_middleware_1.validate)(group_validation_1.attachPolicySchema), (0, express_async_handler_1.default)(group_controller_1.groupController.attachPolicy));
+exports.groupRoutes.delete('/:id/policies/:policyId', rbac_middleware_1.requireRoot, (0, validate_middleware_1.validate)(group_validation_1.groupPolicyParamSchema, 'params'), (0, express_async_handler_1.default)(group_controller_1.groupController.detachPolicy));

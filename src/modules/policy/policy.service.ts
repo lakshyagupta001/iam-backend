@@ -27,29 +27,20 @@ class PolicyService {
     return created;
   }
 
-  async listPolicies(organizationId: string, query: any) {
-    const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
+  async listPolicies(organizationId: string, params: { page: number; limit: number; search?: string, type?: PolicyType, sort?: string, order?: 'asc' | 'desc' }) {
+    const { page, limit, search, type, sort, order } = params;
     const skip = (page - 1) * limit;
 
-    const { data, total } = await policyRepository.listPolicies(organizationId, {
+    const { data: policies, total: totalItems } = await policyRepository.listPolicies(organizationId, {
       skip,
       take: limit,
-      search: query.search,
-      type: query.type,
-      sort: query.sort,
-      order: query.order,
+      search,
+      type,
+      sort,
+      order,
     });
 
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return { totalItems, policies };
   }
 
   async getPolicyById(id: string, organizationId: string): Promise<PolicyWithStatements> {

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { policyService } from './policy.service';
+import { getPaginationParams, formatPaginatedResponse } from '../../shared/utils/pagination';
 
 class PolicyController {
   async createPolicy(req: Request, res: Response): Promise<void> {
@@ -8,8 +9,17 @@ class PolicyController {
   }
 
   async listPolicies(req: Request, res: Response): Promise<void> {
-    const result = await policyService.listPolicies(req.user!.orgId, req.query);
-    res.status(200).json({ success: true, ...result });
+    const params = getPaginationParams(req.query);
+    const type = req.query.type as any;
+    const sort = req.query.sort as string;
+    const order = req.query.order as 'asc' | 'desc';
+    
+    const { totalItems, policies } = await policyService.listPolicies(req.user!.orgId, { ...params, type, sort, order });
+    
+    res.status(200).json({
+      success: true,
+      ...formatPaginatedResponse(policies, totalItems, params.page, params.limit)
+    });
   }
 
   async getPolicy(req: Request, res: Response): Promise<void> {
