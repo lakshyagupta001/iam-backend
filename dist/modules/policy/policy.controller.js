@@ -5,7 +5,7 @@ const policy_service_1 = require("./policy.service");
 const pagination_1 = require("../../shared/utils/pagination");
 class PolicyController {
     async createPolicy(req, res) {
-        const policy = await policy_service_1.policyService.createPolicy(req.user.orgId, req.body);
+        const policy = await policy_service_1.policyService.createPolicy(req.user.orgId, req.user.id, req.body);
         res.status(201).json({ success: true, message: 'Policy created successfully', data: policy });
     }
     async listPolicies(req, res) {
@@ -24,7 +24,7 @@ class PolicyController {
         res.status(200).json({ success: true, data: policy });
     }
     async updatePolicy(req, res) {
-        const policy = await policy_service_1.policyService.updatePolicy(req.params.id, req.user.orgId, req.body);
+        const policy = await policy_service_1.policyService.updatePolicy(req.params.id, req.user.orgId, req.user.id, req.body);
         res.status(200).json({ success: true, message: 'Policy updated successfully', data: policy });
     }
     async deletePolicy(req, res) {

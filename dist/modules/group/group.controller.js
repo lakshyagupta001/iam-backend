@@ -49,7 +49,7 @@ class GroupController {
     async attachPolicy(req, res) {
         const groupId = req.params.id;
         const { policyId } = req.body;
-        await group_service_1.groupService.attachPolicy(groupId, policyId, req.user.orgId);
+        await group_service_1.groupService.attachPolicy(groupId, policyId, req.user.orgId, req.user.id);
         res.status(201).json({ success: true, message: 'Policy attached successfully' });
     }
     async detachPolicy(req, res) {

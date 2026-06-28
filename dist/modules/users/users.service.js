@@ -4,6 +4,7 @@ exports.usersService = void 0;
 const client_1 = require("../../prisma/client");
 const AppError_1 = require("../../shared/utils/AppError");
 const password_1 = require("../../shared/utils/password");
+const delegationBypass_service_1 = require("../delegation/delegationBypass.service");
 class UsersService {
     async listUsers(orgId, params) {
         const { page, limit, search } = params;
@@ -101,7 +102,7 @@ class UsersService {
             directPolicies: user.policies,
         };
     }
-    async attachPolicy(userId, policyId, orgId) {
+    async attachPolicy(userId, policyId, orgId, requestingUserId) {
         const user = await client_1.prisma.user.findFirst({
             where: { id: userId, organizationId: orgId },
         });
@@ -128,6 +129,8 @@ class UsersService {
         if (existingAttachment) {
             throw new AppError_1.AppError(409, 'Policy is already attached to this user');
         }
+        // DBP: requester must hold every Allow action in the policy being attached
+        await delegationBypass_service_1.delegationBypassService.validateForUserPolicyAttachment(requestingUserId, policyId, orgId);
         await client_1.prisma.userPolicyAttachment.create({
             data: {
                 userId,

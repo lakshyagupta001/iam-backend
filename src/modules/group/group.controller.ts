@@ -60,7 +60,7 @@ class GroupController {
   async attachPolicy(req: Request, res: Response): Promise<void> {
     const groupId = req.params.id as string;
     const { policyId } = req.body;
-    await groupService.attachPolicy(groupId, policyId, req.user!.orgId);
+    await groupService.attachPolicy(groupId, policyId, req.user!.orgId, req.user!.id);
     res.status(201).json({ success: true, message: 'Policy attached successfully' });
   }
 

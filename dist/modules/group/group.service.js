@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.groupService = exports.GroupService = void 0;
 const group_repository_1 = require("./group.repository");
 const AppError_1 = require("../../shared/utils/AppError");
+const delegationBypass_service_1 = require("../delegation/delegationBypass.service");
 class GroupService {
     async createGroup(organizationId, data) {
         const existingGroup = await group_repository_1.groupRepository.findGroupByNameAndOrg(data.name, organizationId);
@@ -75,7 +76,7 @@ class GroupService {
         }
         await group_repository_1.groupRepository.removeMember(userId, groupId);
     }
-    async attachPolicy(groupId, policyId, organizationId) {
+    async attachPolicy(groupId, policyId, organizationId, requestingUserId) {
         const group = await group_repository_1.groupRepository.findGroupById(groupId, organizationId);
         if (!group) {
             throw new AppError_1.AppError(404, 'Group not found');
@@ -91,6 +92,8 @@ class GroupService {
         if (isAttached) {
             throw new AppError_1.AppError(409, 'Policy is already attached to this group');
         }
+        // DBP: requester must hold every Allow action in the policy being attached
+        await delegationBypass_service_1.delegationBypassService.validateForGroupPolicyAttachment(requestingUserId, policyId, organizationId);
         await group_repository_1.groupRepository.attachPolicy(groupId, policyId);
     }
     async detachPolicy(groupId, policyId, organizationId) {

@@ -24,7 +24,7 @@ class UsersController {
     async attachPolicy(req, res) {
         const userId = req.params.id;
         const { policyId } = req.body;
-        await users_service_1.usersService.attachPolicy(userId, policyId, req.user.orgId);
+        await users_service_1.usersService.attachPolicy(userId, policyId, req.user.orgId, req.user.id);
         res.status(201).json({ success: true, message: 'Policy attached successfully' });
     }
     async detachPolicy(req, res) {

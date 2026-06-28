@@ -5,12 +5,15 @@ const policy_repository_1 = require("./policy.repository");
 const AppError_1 = require("../../shared/utils/AppError");
 const client_1 = require("@prisma/client");
 const logger_1 = require("../../shared/utils/logger");
+const delegationBypass_service_1 = require("../delegation/delegationBypass.service");
 class PolicyService {
-    async createPolicy(organizationId, data) {
+    async createPolicy(organizationId, requestingUserId, data) {
         const existing = await policy_repository_1.policyRepository.findPolicyByNameAndOrg(data.name, organizationId);
         if (existing) {
             throw new AppError_1.AppError(409, `A policy named '${data.name}' already exists`);
         }
+        // DBP: requester must hold every Allow action they are trying to grant
+        await delegationBypass_service_1.delegationBypassService.validateForPolicyCreate(requestingUserId, data.name, data.statements);
         const created = await policy_repository_1.policyRepository.createPolicy(data.name, data.description, data.type, organizationId, data.statements.map(s => ({
             effect: s.effect,
             actions: s.actions,
@@ -39,7 +42,7 @@ class PolicyService {
         }
         return policy;
     }
-    async updatePolicy(id, organizationId, data) {
+    async updatePolicy(id, organizationId, requestingUserId, data) {
         const policy = await policy_repository_1.policyRepository.findPolicyById(id, organizationId);
         if (!policy) {
             throw new AppError_1.AppError(404, 'Policy not found');
@@ -49,6 +52,10 @@ class PolicyService {
             if (existing) {
                 throw new AppError_1.AppError(409, `A policy named '${data.name}' already exists`);
             }
+        }
+        // DBP: only run when statements are being changed (name-only updates do not alter grants)
+        if (data.statements && data.statements.length > 0) {
+            await delegationBypass_service_1.delegationBypassService.validateForPolicyUpdate(requestingUserId, id, data.name ?? policy.name, data.statements);
         }
         const statements = data.statements?.map(s => ({
             effect: s.effect,

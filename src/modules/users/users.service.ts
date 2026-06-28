@@ -3,6 +3,7 @@ import { AppError } from '../../shared/utils/AppError';
 import { hashPassword } from '../../shared/utils/password';
 import { z } from 'zod';
 import { createUserSchema } from './users.validation';
+import { delegationBypassService } from '../delegation/delegationBypass.service';
 
 class UsersService {
   async listUsers(orgId: string, params: { page: number; limit: number; search?: string }) {
@@ -114,7 +115,12 @@ class UsersService {
     };
   }
 
-  async attachPolicy(userId: string, policyId: string, orgId: string): Promise<void> {
+  async attachPolicy(
+    userId: string,
+    policyId: string,
+    orgId: string,
+    requestingUserId: string
+  ): Promise<void> {
     const user = await prisma.user.findFirst({
       where: { id: userId, organizationId: orgId },
     });
@@ -144,6 +150,13 @@ class UsersService {
     if (existingAttachment) {
       throw new AppError(409, 'Policy is already attached to this user');
     }
+
+    // DBP: requester must hold every Allow action in the policy being attached
+    await delegationBypassService.validateForUserPolicyAttachment(
+      requestingUserId,
+      policyId,
+      orgId
+    );
 
     await prisma.userPolicyAttachment.create({
       data: {

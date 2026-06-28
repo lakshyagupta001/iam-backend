@@ -2,6 +2,7 @@ import { groupRepository } from './group.repository';
 import { CreateGroupDto, UpdateGroupDto, GroupQueryDto } from './group.types';
 import { AppError } from '../../shared/utils/AppError';
 import { Group } from '@prisma/client';
+import { delegationBypassService } from '../delegation/delegationBypass.service';
 
 export class GroupService {
   async createGroup(organizationId: string, data: CreateGroupDto): Promise<Group> {
@@ -105,7 +106,12 @@ export class GroupService {
     await groupRepository.removeMember(userId, groupId);
   }
 
-  async attachPolicy(groupId: string, policyId: string, organizationId: string): Promise<void> {
+  async attachPolicy(
+    groupId: string,
+    policyId: string,
+    organizationId: string,
+    requestingUserId: string
+  ): Promise<void> {
     const group = await groupRepository.findGroupById(groupId, organizationId);
     if (!group) {
       throw new AppError(404, 'Group not found');
@@ -123,6 +129,13 @@ export class GroupService {
     if (isAttached) {
       throw new AppError(409, 'Policy is already attached to this group');
     }
+
+    // DBP: requester must hold every Allow action in the policy being attached
+    await delegationBypassService.validateForGroupPolicyAttachment(
+      requestingUserId,
+      policyId,
+      organizationId
+    );
 
     await groupRepository.attachPolicy(groupId, policyId);
   }

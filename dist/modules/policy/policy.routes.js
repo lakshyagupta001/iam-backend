@@ -9,11 +9,12 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const policy_controller_1 = require("./policy.controller");
 const validate_middleware_1 = require("../../shared/middleware/validate.middleware");
 const auth_middleware_1 = require("../../shared/middleware/auth.middleware");
+const iam_middleware_1 = require("../../shared/middleware/iam.middleware");
 const policy_validation_1 = require("./policy.validation");
 exports.policyRoutes = (0, express_1.Router)();
 exports.policyRoutes.use(auth_middleware_1.authMiddleware);
-exports.policyRoutes.post('/', (0, validate_middleware_1.validate)(policy_validation_1.createPolicySchema), (0, express_async_handler_1.default)(policy_controller_1.policyController.createPolicy));
-exports.policyRoutes.get('/', (0, express_async_handler_1.default)(policy_controller_1.policyController.listPolicies));
-exports.policyRoutes.get('/:id', (0, express_async_handler_1.default)(policy_controller_1.policyController.getPolicy));
-exports.policyRoutes.put('/:id', (0, validate_middleware_1.validate)(policy_validation_1.updatePolicySchema), (0, express_async_handler_1.default)(policy_controller_1.policyController.updatePolicy));
-exports.policyRoutes.delete('/:id', (0, express_async_handler_1.default)(policy_controller_1.policyController.deletePolicy));
+exports.policyRoutes.post('/', (0, iam_middleware_1.iamCheck)('iam:CreatePolicy'), (0, validate_middleware_1.validate)(policy_validation_1.createPolicySchema), (0, express_async_handler_1.default)(policy_controller_1.policyController.createPolicy));
+exports.policyRoutes.get('/', (0, iam_middleware_1.iamCheck)('iam:ListPolicies'), (0, express_async_handler_1.default)(policy_controller_1.policyController.listPolicies));
+exports.policyRoutes.get('/:id', (0, iam_middleware_1.iamCheck)('iam:GetPolicy'), (0, express_async_handler_1.default)(policy_controller_1.policyController.getPolicy));
+exports.policyRoutes.put('/:id', (0, iam_middleware_1.iamCheck)('iam:UpdatePolicy'), (0, validate_middleware_1.validate)(policy_validation_1.updatePolicySchema), (0, express_async_handler_1.default)(policy_controller_1.policyController.updatePolicy));
+exports.policyRoutes.delete('/:id', (0, iam_middleware_1.iamCheck)('iam:DeletePolicy'), (0, express_async_handler_1.default)(policy_controller_1.policyController.deletePolicy));

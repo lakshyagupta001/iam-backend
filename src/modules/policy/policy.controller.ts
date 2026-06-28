@@ -4,7 +4,7 @@ import { getPaginationParams, formatPaginatedResponse } from '../../shared/utils
 
 class PolicyController {
   async createPolicy(req: Request, res: Response): Promise<void> {
-    const policy = await policyService.createPolicy(req.user!.orgId, req.body);
+    const policy = await policyService.createPolicy(req.user!.orgId, req.user!.id, req.body);
     res.status(201).json({ success: true, message: 'Policy created successfully', data: policy });
   }
 
@@ -28,7 +28,7 @@ class PolicyController {
   }
 
   async updatePolicy(req: Request, res: Response): Promise<void> {
-    const policy = await policyService.updatePolicy(req.params.id as string, req.user!.orgId, req.body);
+    const policy = await policyService.updatePolicy(req.params.id as string, req.user!.orgId, req.user!.id, req.body);
     res.status(200).json({ success: true, message: 'Policy updated successfully', data: policy });
   }
 

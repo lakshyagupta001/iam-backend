@@ -3,13 +3,25 @@ import { CreatePolicyDto, UpdatePolicyDto } from './policy.types';
 import { AppError } from '../../shared/utils/AppError';
 import { PolicyType, Policy } from '@prisma/client';
 import { logger } from '../../shared/utils/logger';
+import { delegationBypassService } from '../delegation/delegationBypass.service';
 
 class PolicyService {
-  async createPolicy(organizationId: string, data: CreatePolicyDto): Promise<PolicyWithStatements> {
+  async createPolicy(
+    organizationId: string,
+    requestingUserId: string,
+    data: CreatePolicyDto
+  ): Promise<PolicyWithStatements> {
     const existing = await policyRepository.findPolicyByNameAndOrg(data.name, organizationId);
     if (existing) {
       throw new AppError(409, `A policy named '${data.name}' already exists`);
     }
+
+    // DBP: requester must hold every Allow action they are trying to grant
+    await delegationBypassService.validateForPolicyCreate(
+      requestingUserId,
+      data.name,
+      data.statements
+    );
 
     const created = await policyRepository.createPolicy(
       data.name,
@@ -51,7 +63,12 @@ class PolicyService {
     return policy;
   }
 
-  async updatePolicy(id: string, organizationId: string, data: UpdatePolicyDto): Promise<PolicyWithStatements> {
+  async updatePolicy(
+    id: string,
+    organizationId: string,
+    requestingUserId: string,
+    data: UpdatePolicyDto
+  ): Promise<PolicyWithStatements> {
     const policy = await policyRepository.findPolicyById(id, organizationId);
     if (!policy) {
       throw new AppError(404, 'Policy not found');
@@ -62,6 +79,16 @@ class PolicyService {
       if (existing) {
         throw new AppError(409, `A policy named '${data.name}' already exists`);
       }
+    }
+
+    // DBP: only run when statements are being changed (name-only updates do not alter grants)
+    if (data.statements && data.statements.length > 0) {
+      await delegationBypassService.validateForPolicyUpdate(
+        requestingUserId,
+        id,
+        data.name ?? policy.name,
+        data.statements
+      );
     }
 
     const statements = data.statements?.map(s => ({
