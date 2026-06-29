@@ -122,6 +122,34 @@ class PolicyRepository {
     return { data, total };
   }
 
+  async findManyWithStatements(
+    organizationId: string,
+    params: {
+      search?: string;
+      type?: PolicyType;
+    }
+  ): Promise<PolicyWithStatements[]> {
+    const where: any = { organizationId };
+
+    if (params.search) {
+      where.name = {
+        contains: params.search,
+        mode: 'insensitive',
+      };
+    }
+
+    if (params.type) {
+      where.type = params.type;
+    }
+
+    return prisma.policy.findMany({
+      where,
+      include: {
+        statements: true,
+      },
+    });
+  }
+
   async countAttachments(policyId: string): Promise<{ users: number; groups: number }> {
     const [users, groups] = await Promise.all([
       prisma.userPolicyAttachment.count({ where: { policyId } }),

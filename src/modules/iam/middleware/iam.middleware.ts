@@ -21,11 +21,11 @@ import { logger } from '../../../shared/utils/logger';
  *   4. Allowed → next().
  *   5. Denied → 403 with a consistent JSON error body.
  */
-export const iamCheck = (action: IamAction) => {
+export const iamCheck = (actions: IamAction | IamAction[]) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Guard: auth middleware must have already run and attached req.user
     if (!req.user) {
-      logger.warn('[IAM] iamCheck called before authMiddleware — req.user is missing', { action });
+      logger.warn('[IAM] iamCheck called before authMiddleware — req.user is missing', { actions });
       res.status(401).json({
         success: false,
         message: 'Unauthorized. Authentication is required before authorization.',
@@ -35,20 +35,27 @@ export const iamCheck = (action: IamAction) => {
 
     const { id: userId, isRoot } = req.user;
     const route = `${req.method} ${req.originalUrl}`;
+    const actionList = Array.isArray(actions) ? actions : [actions];
 
     // Root users bypass the evaluation engine entirely (per PRD §5 and ARCHITECTURE §2)
     if (isRoot) {
-      logger.info('[IAM] Root bypass', { userId, action, route, result: 'ALLOWED' });
+      logger.info('[IAM] Root bypass', { userId, actions: actionList, route, result: 'ALLOWED' });
       next();
       return;
     }
 
     try {
-      const allowed = await permissionService.canPerformAction(userId, action);
+      let allowed = false;
+      for (const action of actionList) {
+        if (await permissionService.canPerformAction(userId, action)) {
+          allowed = true;
+          break;
+        }
+      }
 
       logger.info('[IAM] Authorization evaluated', {
         userId,
-        action,
+        actions: actionList,
         route,
         result: allowed ? 'ALLOWED' : 'DENIED',
       });
@@ -66,7 +73,7 @@ export const iamCheck = (action: IamAction) => {
       // If the permission service fails for any reason, deny by default (fail-closed)
       logger.error('[IAM] Permission evaluation threw an unexpected error — denying by default', {
         userId,
-        action,
+        actions: actionList,
         route,
         error: error instanceof Error ? error.message : String(error),
       });

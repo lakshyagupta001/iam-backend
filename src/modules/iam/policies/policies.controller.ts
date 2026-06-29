@@ -22,6 +22,25 @@ class PolicyController {
     });
   }
 
+  async listDelegatablePolicies(req: Request, res: Response): Promise<void> {
+    const params = getPaginationParams(req.query);
+    const type = req.query.type as any;
+    const sort = req.query.sort as string;
+    const order = req.query.order as 'asc' | 'desc';
+    
+    const { totalItems, policies } = await policyService.listDelegatablePolicies(
+      req.user!.orgId,
+      req.user!.id,
+      req.user!.isRoot,
+      { ...params, type, sort, order }
+    );
+    
+    res.status(200).json({
+      success: true,
+      ...formatPaginatedResponse(policies, totalItems, params.page, params.limit)
+    });
+  }
+
   async getPolicy(req: Request, res: Response): Promise<void> {
     const policy = await policyService.getPolicyById(req.params.id as string, req.user!.orgId);
     res.status(200).json({ success: true, data: policy });

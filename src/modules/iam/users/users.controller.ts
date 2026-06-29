@@ -39,17 +39,24 @@ class UsersController {
   }
 
   async getEffectivePermissions(req: Request, res: Response): Promise<void> {
-    // 1. Validate the user ID (already done by idParamSchema in routes)
     const userId = req.params.id as string;
-    
+    const requestingUser = req.user!;
+
+    // Security: a non-root user may only fetch their own effective permissions
+    // unless they have iam:GetUser (checked via the IAM evaluation engine).
+    // We check self-access here so the route can remain open for the login flow.
+    const { permissionService: evalService } = await import('../evaluation/evaluation.service');
+    const canGetOthers = requestingUser.isRoot || await evalService.canPerformAction(requestingUser.id, 'iam:GetUser');
+
+    if (!canGetOthers && requestingUser.id !== userId) {
+      res.status(403).json({ success: false, message: 'Access denied. You may only view your own effective permissions.' });
+      return;
+    }
+
     // Ensure the user exists in this organization before returning permissions
-    // We can just call getUserById which throws 404 if not found
-    await usersService.getUserById(userId, req.user!.orgId);
+    await usersService.getUserById(userId, requestingUser.orgId);
 
-    // 2. Call the existing Permission Evaluation Service
     const permissions = await permissionService.getEffectivePermissions(userId);
-
-    // 3. Return the calculated effective permissions
     res.status(200).json({ success: true, data: permissions });
   }
 }

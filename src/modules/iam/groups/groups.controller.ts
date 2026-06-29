@@ -12,10 +12,29 @@ class GroupController {
   async listGroups(req: Request, res: Response): Promise<void> {
     // Validate query string
     const query = groupQuerySchema.parse(req.query) as GroupQueryDto;
-
-    const result = await groupService.listGroups(req.user!.orgId, query);
-    const { formatPaginatedResponse } = require('../../../shared/utils/pagination');
     
+    const result = await groupService.listGroups(req.user!.orgId, query);
+    
+    const { formatPaginatedResponse } = await import('../../../shared/utils/pagination');
+
+    res.status(200).json({
+      success: true,
+      ...formatPaginatedResponse(result.groups, result.total, query.page || 1, query.limit || 10)
+    });
+  }
+
+  async listDelegatableGroups(req: Request, res: Response): Promise<void> {
+    const query = groupQuerySchema.parse(req.query) as GroupQueryDto;
+    
+    const result = await groupService.listDelegatableGroups(
+      req.user!.orgId,
+      req.user!.id,
+      req.user!.isRoot,
+      query
+    );
+    
+    const { formatPaginatedResponse } = await import('../../../shared/utils/pagination');
+
     res.status(200).json({
       success: true,
       ...formatPaginatedResponse(result.groups, result.total, query.page || 1, query.limit || 10)

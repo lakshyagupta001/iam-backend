@@ -36,6 +36,70 @@ export class GroupService {
     return { groups, total };
   }
 
+  async listDelegatableGroups(
+    organizationId: string,
+    requestingUserId: string,
+    isRoot: boolean,
+    query: GroupQueryDto
+  ): Promise<{ groups: Group[], total: number }> {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    if (isRoot) {
+      const [groups, total] = await groupRepository.findGroups(
+        organizationId,
+        skip,
+        limit,
+        query.search,
+        query.sort,
+        query.order
+      );
+      return { groups, total };
+    }
+
+    // For non-root users, filter out groups they cannot delegate (DBP check on attached policies)
+    const { permissionService } = await import('../evaluation/evaluation.service');
+    const effectivePerms = await permissionService.getEffectivePermissions(requestingUserId);
+    
+    const allGroups = await groupRepository.findAllGroupsWithPoliciesAndStatements(organizationId, query.search);
+    
+    // Filter delegatable groups: a group is delegatable only if ALL its attached
+    // policies contain only ALLOW actions the requesting user already holds.
+    // This mirrors the Delegation Bypass Prevention invariant exactly.
+    const delegatableGroups = allGroups.filter(group => {
+      for (const attachment of group.policies) {
+        if (!delegationBypassService.checkAllowStatementsSync(effectivePerms, attachment.policy.statements)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // Apply sorting in memory
+    const sortField = query.sort || 'createdAt';
+    const sortOrder = query.order || 'desc';
+    
+    delegatableGroups.sort((a: any, b: any) => {
+      const valA = a[sortField];
+      const valB = b[sortField];
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Apply pagination in memory
+    const paginatedGroups = delegatableGroups.slice(skip, skip + limit);
+
+    // Remove policies and statements before returning to match the original return type
+    const groups = paginatedGroups.map(g => {
+      const { policies, ...rest } = g;
+      return rest;
+    });
+
+    return { groups, total: delegatableGroups.length };
+  }
+
   async getGroupById(id: string, organizationId: string): Promise<Group> {
     const group = await groupRepository.findGroupById(id, organizationId);
     

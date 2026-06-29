@@ -3,7 +3,7 @@ import { AppError } from '../../../shared/utils/AppError';
 import { logger } from '../../../shared/utils/logger';
 import { permissionService } from '../evaluation/evaluation.service';
 import { policyRepository } from '../policies/policies.repository';
-import { IamAction } from '../shared/iam.constants';
+import { IamAction, IAM_ACTIONS } from '../shared/iam.constants';
 import { PolicyStatementDto } from '../policies/policies.types';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -88,6 +88,34 @@ class DelegationBypassService {
       policyId: ctx.policyId,
       result: 'ALLOWED',
     });
+  }
+
+  /**
+   * Synchronous version of checkAllowStatements used for in-memory filtering.
+   * Assumes the caller has already computed the user's effective permissions.
+   * Returns true if the statements can be delegated, false otherwise.
+   */
+  checkAllowStatementsSync(
+    effectivePerms: Record<IamAction, boolean>,
+    statements: { effect: string; actions: string[] }[]
+  ): boolean {
+    for (const statement of statements) {
+      if (statement.effect !== Effect.ALLOW) {
+        continue;
+      }
+
+      for (const action of statement.actions) {
+        if (action === '*') {
+          // If the policy grants '*', the user must have ALL IAM actions
+          const hasAll = IAM_ACTIONS.every(a => effectivePerms[a]);
+          if (!hasAll) return false;
+        } else {
+          // Otherwise, the user must have the specific action
+          if (!effectivePerms[action as IamAction]) return false;
+        }
+      }
+    }
+    return true;
   }
 
   // ────────────────────────────────────────────────────────────────────────────

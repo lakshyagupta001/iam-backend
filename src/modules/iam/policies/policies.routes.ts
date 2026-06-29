@@ -12,6 +12,7 @@ policyRoutes.use(authMiddleware);
 
 policyRoutes.post('/', iamCheck('iam:CreatePolicy'), validate(createPolicySchema), asyncHandler(policyController.createPolicy));
 policyRoutes.get('/', iamCheck('iam:ListPolicies'), asyncHandler(policyController.listPolicies));
+policyRoutes.get('/delegatable', iamCheck(['iam:ListPolicies', 'iam:AttachUserPolicy', 'iam:AttachGroupPolicy']), asyncHandler(policyController.listDelegatablePolicies));
 policyRoutes.get('/:id', iamCheck('iam:GetPolicy'), asyncHandler(policyController.getPolicy));
 policyRoutes.put('/:id', iamCheck('iam:UpdatePolicy'), validate(updatePolicySchema), asyncHandler(policyController.updatePolicy));
 policyRoutes.delete('/:id', iamCheck('iam:DeletePolicy'), asyncHandler(policyController.deletePolicy));

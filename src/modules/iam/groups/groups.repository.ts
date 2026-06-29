@@ -72,6 +72,37 @@ export class GroupRepository {
     ]);
   }
 
+  async findAllGroupsWithPoliciesAndStatements(
+    organizationId: string,
+    search?: string
+  ) {
+    const where: Prisma.GroupWhereInput = {
+      organizationId,
+    };
+
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    return prisma.group.findMany({
+      where,
+      include: {
+        policies: {
+          include: {
+            policy: {
+              include: {
+                statements: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   async updateGroup(id: string, data: Prisma.GroupUpdateInput): Promise<Group> {
     return prisma.group.update({
       where: { id },

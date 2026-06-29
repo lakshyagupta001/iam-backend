@@ -55,6 +55,62 @@ class PolicyService {
     return { totalItems, policies };
   }
 
+  async listDelegatablePolicies(
+    organizationId: string,
+    requestingUserId: string,
+    isRoot: boolean,
+    params: { page: number; limit: number; search?: string, type?: PolicyType, sort?: string, order?: 'asc' | 'desc' }
+  ) {
+    const { page, limit, search, type, sort, order } = params;
+    const skip = (page - 1) * limit;
+
+    if (isRoot) {
+      const { data: policies, total: totalItems } = await policyRepository.listPolicies(organizationId, {
+        skip,
+        take: limit,
+        search,
+        type,
+        sort,
+        order,
+      });
+      return { totalItems, policies };
+    }
+
+    // For non-root users, filter out policies they cannot delegate (DBP check)
+    const { permissionService } = await import('../evaluation/evaluation.service');
+    const effectivePerms = await permissionService.getEffectivePermissions(requestingUserId);
+    
+    const allPolicies = await policyRepository.findManyWithStatements(organizationId, { search, type });
+    
+    // Filter delegatable policies
+    const delegatablePolicies = allPolicies.filter(policy => 
+      delegationBypassService.checkAllowStatementsSync(effectivePerms, policy.statements)
+    );
+
+    // Apply sorting in memory
+    const sortField = sort || 'createdAt';
+    const sortOrder = order || 'desc';
+    
+    delegatablePolicies.sort((a: any, b: any) => {
+      const valA = a[sortField];
+      const valB = b[sortField];
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Apply pagination in memory
+    const paginatedPolicies = delegatablePolicies.slice(skip, skip + limit);
+
+    // Remove statements before returning to match the original return type if needed
+    const policies = paginatedPolicies.map(p => {
+      const { statements, ...rest } = p;
+      return rest;
+    });
+
+    return { totalItems: delegatablePolicies.length, policies };
+  }
+
   async getPolicyById(id: string, organizationId: string): Promise<PolicyWithStatements> {
     const policy = await policyRepository.findPolicyById(id, organizationId);
     if (!policy) {
