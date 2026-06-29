@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.alertsRoutes = void 0;
+const express_1 = require("express");
+const express_async_handler_1 = __importDefault(require("express-async-handler"));
+const alerts_controller_1 = require("./alerts.controller");
+const validate_middleware_1 = require("../../../shared/middleware/validate.middleware");
+const auth_middleware_1 = require("../../../shared/middleware/auth.middleware");
+const iam_middleware_1 = require("../../iam/middleware/iam.middleware");
+const alerts_validation_1 = require("./alerts.validation");
+exports.alertsRoutes = (0, express_1.Router)();
+exports.alertsRoutes.use(auth_middleware_1.authMiddleware);
+exports.alertsRoutes.get('/', (0, iam_middleware_1.iamCheck)('alerts:Read'), (0, express_async_handler_1.default)(alerts_controller_1.alertsController.list));
+exports.alertsRoutes.get('/:id', (0, iam_middleware_1.iamCheck)('alerts:Read'), (0, express_async_handler_1.default)(alerts_controller_1.alertsController.get));
+exports.alertsRoutes.post('/', (0, iam_middleware_1.iamCheck)('alerts:Create'), (0, validate_middleware_1.validate)(alerts_validation_1.createAlertSchema), (0, express_async_handler_1.default)(alerts_controller_1.alertsController.create));
+exports.alertsRoutes.put('/:id', (0, iam_middleware_1.iamCheck)('alerts:Update'), (0, validate_middleware_1.validate)(alerts_validation_1.updateAlertSchema), (0, express_async_handler_1.default)(alerts_controller_1.alertsController.update));
+exports.alertsRoutes.delete('/:id', (0, iam_middleware_1.iamCheck)('alerts:Delete'), (0, express_async_handler_1.default)(alerts_controller_1.alertsController.delete));

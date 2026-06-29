@@ -8,4 +8,5 @@ export const auditRoutes = Router();
 
 auditRoutes.use(authMiddleware);
 
-auditRoutes.get('/', iamCheck('audit:Read'), asyncHandler(auditController.list));
+auditRoutes.get('/', iamCheck('audit:List'), asyncHandler(auditController.list));
+auditRoutes.get('/:id', iamCheck('audit:Read'), asyncHandler(auditController.get));

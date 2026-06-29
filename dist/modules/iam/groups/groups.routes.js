@@ -1,0 +1,25 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.groupRoutes = void 0;
+const express_1 = require("express");
+const express_async_handler_1 = __importDefault(require("express-async-handler"));
+const groups_controller_1 = require("./groups.controller");
+const validate_middleware_1 = require("../../../shared/middleware/validate.middleware");
+const auth_middleware_1 = require("../../../shared/middleware/auth.middleware");
+const iam_middleware_1 = require("../middleware/iam.middleware");
+const groups_validation_1 = require("./groups.validation");
+exports.groupRoutes = (0, express_1.Router)();
+exports.groupRoutes.use(auth_middleware_1.authMiddleware);
+exports.groupRoutes.post('/', (0, iam_middleware_1.iamCheck)('iam:CreateGroup'), (0, validate_middleware_1.validate)(groups_validation_1.createGroupSchema), (0, express_async_handler_1.default)(groups_controller_1.groupController.createGroup));
+exports.groupRoutes.get('/', (0, iam_middleware_1.iamCheck)('iam:ListGroups'), (0, validate_middleware_1.validate)(groups_validation_1.groupQuerySchema, 'query'), (0, express_async_handler_1.default)(groups_controller_1.groupController.listGroups));
+exports.groupRoutes.get('/delegatable', (0, iam_middleware_1.iamCheck)(['iam:ListGroups', 'iam:AddUserToGroup']), (0, validate_middleware_1.validate)(groups_validation_1.groupQuerySchema, 'query'), (0, express_async_handler_1.default)(groups_controller_1.groupController.listDelegatableGroups));
+exports.groupRoutes.get('/:id', (0, iam_middleware_1.iamCheck)('iam:GetGroup'), (0, validate_middleware_1.validate)(groups_validation_1.idParamSchema, 'params'), (0, express_async_handler_1.default)(groups_controller_1.groupController.getGroup));
+exports.groupRoutes.put('/:id', (0, iam_middleware_1.iamCheck)('iam:UpdateGroup'), (0, validate_middleware_1.validate)(groups_validation_1.idParamSchema, 'params'), (0, validate_middleware_1.validate)(groups_validation_1.updateGroupSchema), (0, express_async_handler_1.default)(groups_controller_1.groupController.updateGroup));
+exports.groupRoutes.delete('/:id', (0, iam_middleware_1.iamCheck)('iam:DeleteGroup'), (0, validate_middleware_1.validate)(groups_validation_1.idParamSchema, 'params'), (0, express_async_handler_1.default)(groups_controller_1.groupController.deleteGroup));
+exports.groupRoutes.post('/:id/members', (0, iam_middleware_1.iamCheck)('iam:AddUserToGroup'), (0, validate_middleware_1.validate)(groups_validation_1.idParamSchema, 'params'), (0, validate_middleware_1.validate)(groups_validation_1.addMemberSchema), (0, express_async_handler_1.default)(groups_controller_1.groupController.addMember));
+exports.groupRoutes.delete('/:id/members/:userId', (0, iam_middleware_1.iamCheck)('iam:RemoveUserFromGroup'), (0, validate_middleware_1.validate)(groups_validation_1.groupUserParamSchema, 'params'), (0, express_async_handler_1.default)(groups_controller_1.groupController.removeMember));
+exports.groupRoutes.post('/:id/policies', (0, iam_middleware_1.iamCheck)('iam:AttachGroupPolicy'), (0, validate_middleware_1.validate)(groups_validation_1.idParamSchema, 'params'), (0, validate_middleware_1.validate)(groups_validation_1.attachPolicySchema), (0, express_async_handler_1.default)(groups_controller_1.groupController.attachPolicy));
+exports.groupRoutes.delete('/:id/policies/:policyId', (0, iam_middleware_1.iamCheck)('iam:DetachGroupPolicy'), (0, validate_middleware_1.validate)(groups_validation_1.groupPolicyParamSchema, 'params'), (0, express_async_handler_1.default)(groups_controller_1.groupController.detachPolicy));

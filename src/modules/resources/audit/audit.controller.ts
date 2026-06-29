@@ -12,4 +12,11 @@ export const auditController = {
       ...formatPaginatedResponse(logs, totalItems, params.page, params.limit)
     });
   },
+
+  async get(req: Request, res: Response) {
+    const { orgId: organizationId } = req.user!;
+    const id = req.params.id as string;
+    const log = await auditService.getLogById(organizationId, id);
+    res.json(log);
+  },
 };

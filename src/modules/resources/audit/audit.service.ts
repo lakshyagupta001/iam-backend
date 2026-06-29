@@ -1,4 +1,5 @@
 import { auditRepository } from './audit.repository';
+import { AppError } from '../../../shared/utils/AppError';
 
 export const auditService = {
   async listLogs(organizationId: string, params: { page: number; limit: number; search?: string }) {
@@ -9,4 +10,12 @@ export const auditService = {
     ]);
     return { totalItems, logs };
   },
+
+  async getLogById(organizationId: string, id: string) {
+    const log = await auditRepository.findById(organizationId, id);
+    if (!log) {
+      throw new AppError(404, 'Audit log not found');
+    }
+    return log;
+  }
 };
