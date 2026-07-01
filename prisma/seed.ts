@@ -348,10 +348,10 @@ const USER_DEFINITIONS: UserDef[] = [
     directPolicies: ['ReportsAdmin'], // direct attachment demo
   },
 
-  // Alice Smith — QA engineer in QA group, read-only boundary
+  // Aditi Sharma — QA engineer in QA group, read-only boundary
   {
-    name:           'Alice Smith',
-    email:          'alice@changenetworks.com',
+    name:           'Aditi Sharma',
+    email:          'aditi@changenetworks.com',
     password:       'Pass@123',
     isRoot:         false,
     groups:         ['QA'],
@@ -359,20 +359,20 @@ const USER_DEFINITIONS: UserDef[] = [
     boundary:       'ReadOnlyBoundary',
   },
 
-  // Bob Johnson — Security team member with IAM admin powers
+  // Rahul Verma — Security team member with IAM admin powers
   {
-    name:           'Bob Johnson',
-    email:          'bob@changenetworks.com',
+    name:           'Rahul Verma',
+    email:          'rahul@changenetworks.com',
     password:       'Pass@123',
     isRoot:         false,
     groups:         ['Security'],
     directPolicies: ['AuditViewer'], // direct attachment in addition to group
   },
 
-  // John Doe — Frontend developer with developer boundary
+  // Karan Patel — Frontend developer with developer boundary
   {
-    name:           'John Doe',
-    email:          'john@changenetworks.com',
+    name:           'Karan Patel',
+    email:          'karan@changenetworks.com',
     password:       'Pass@123',
     isRoot:         false,
     groups:         ['Frontend Team'],
@@ -380,10 +380,10 @@ const USER_DEFINITIONS: UserDef[] = [
     boundary:       'DeveloperBoundary',
   },
 
-  // Sara Chen — Auditor with direct AuditViewer policy and support boundary
+  // Priya Singh — Auditor with direct AuditViewer policy and support boundary
   {
-    name:           'Sara Chen',
-    email:          'sara@changenetworks.com',
+    name:           'Priya Singh',
+    email:          'priya@changenetworks.com',
     password:       'Pass@123',
     isRoot:         false,
     groups:         ['Auditors'],
@@ -552,10 +552,10 @@ const AUDIT_LOGS = [
   { action: 'REPORT_CREATED',      performedBy: 'lakshya@changenetworks.com', },
   { action: 'AUTH_LOGIN',          performedBy: 'yash@changenetworks.com',    },
   { action: 'SETTINGS_UPDATED',    performedBy: 'yash@changenetworks.com',    },
-  { action: 'AUTH_LOGIN',          performedBy: 'bob@changenetworks.com',     },
-  { action: 'IAM_BOUNDARY_SET',    performedBy: 'bob@changenetworks.com',     },
-  { action: 'ALERT_ACKNOWLEDGED',  performedBy: 'alice@changenetworks.com',   },
-  { action: 'AUTH_LOGOUT',         performedBy: 'john@changenetworks.com',    },
+  { action: 'AUTH_LOGIN',          performedBy: 'rahul@changenetworks.com',     },
+  { action: 'IAM_BOUNDARY_SET',    performedBy: 'rahul@changenetworks.com',     },
+  { action: 'ALERT_ACKNOWLEDGED',  performedBy: 'aditi@changenetworks.com',   },
+  { action: 'AUTH_LOGOUT',         performedBy: 'karan@changenetworks.com',    },
 ];
 
 async function seedAuditLogs(orgId: string) {
@@ -609,13 +609,13 @@ async function main() {
   console.log('  Demo Credentials (password: Pass@123)');
   console.log('  ─────────────────────────────────────────────────');
   console.log('  Root Admin  →  root@changenetworks.com');
-  console.log('  Developer   →  lakshya@changenetworks.com');
-  console.log('  Manager     →  yash@changenetworks.com');
-  console.log('  QA          →  alice@changenetworks.com');
-  console.log('  Security    →  bob@changenetworks.com');
-  console.log('  Frontend    →  john@changenetworks.com');
-  console.log('  Auditor     →  sara@changenetworks.com');
-  console.log('  Manager 2   →  vikasojha@changenetworks.com');
+  console.log('  User        →  lakshya@changenetworks.com');
+  console.log('  User        →  yash@changenetworks.com');
+  console.log('  User        →  aditi@changenetworks.com');
+  console.log('  User        →  rahul@changenetworks.com');
+  console.log('  User        →  karan@changenetworks.com');
+  console.log('  User        →  priya@changenetworks.com');
+  console.log('  User        →  vikasojha@changenetworks.com');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
 }
