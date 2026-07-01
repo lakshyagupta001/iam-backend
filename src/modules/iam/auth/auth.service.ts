@@ -10,26 +10,39 @@ import { env } from '../../../shared/config/env';
 
 class AuthService {
   async register(data: z.infer<typeof registerSchema>): Promise<void> {
-    const existingOrg = await authRepository.findOrganizationByName(data.organizationName);
-    if (existingOrg) {
-      throw new AppError(409, 'This organization has already been initialized. Please contact your organization\'s administrator for access.');
-    }
-
     const existingUser = await authRepository.findUserByEmail(data.email);
     if (existingUser) {
       throw new AppError(409, 'Email already in use');
     }
 
-    const newOrg = await authRepository.createOrganization(data.organizationName);
-    const hashedPassword = await hashPassword(data.password);
-
-    await authRepository.createUser({
-      name: data.name,
-      email: data.email,
-      passwordHash: hashedPassword,
-      isRoot: true, // First user is always Root
-      organizationId: newOrg.id,
-    });
+    if (data.registrationType === 'NORMAL') {
+      const existingOrg = await authRepository.findOrganizationByName(data.organizationName);
+      if (!existingOrg) {
+        throw new AppError(404, 'Organization not found. Please check the organization name.');
+      }
+      const hashedPassword = await hashPassword(data.password);
+      await authRepository.createUser({
+        name: data.name,
+        email: data.email,
+        passwordHash: hashedPassword,
+        isRoot: false,
+        organizationId: existingOrg.id,
+      });
+    } else {
+      const existingOrg = await authRepository.findOrganizationByName(data.organizationName);
+      if (existingOrg) {
+        throw new AppError(409, 'This organization has already been initialized. Please contact your organization\'s administrator for access.');
+      }
+      const newOrg = await authRepository.createOrganization(data.organizationName);
+      const hashedPassword = await hashPassword(data.password);
+      await authRepository.createUser({
+        name: data.name,
+        email: data.email,
+        passwordHash: hashedPassword,
+        isRoot: true,
+        organizationId: newOrg.id,
+      });
+    }
   }
 
   async login(data: z.infer<typeof loginSchema>): Promise<{ loginResponse: LoginResponse; rawRefreshToken: string }> {

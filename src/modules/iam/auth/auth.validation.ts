@@ -4,6 +4,7 @@ export const registerSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   email: z.string().trim().toLowerCase().email('Invalid email format'),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
+  registrationType: z.enum(['ROOT', 'NORMAL']).default('ROOT'),
   organizationName: z.string().trim().min(1, 'Organization name is required'),
 });
 
