@@ -42,7 +42,6 @@ class GroupController {
         res.status(201).json({ success: true, message: 'Group created successfully', data: group });
     }
     async listGroups(req, res) {
-        // Validate query string
         const query = groups_validation_1.groupQuerySchema.parse(req.query);
         const result = await groups_service_1.groupService.listGroups(req.user.orgId, query);
         const { formatPaginatedResponse } = await Promise.resolve().then(() => __importStar(require('../../../shared/utils/pagination')));
@@ -62,7 +61,6 @@ class GroupController {
     }
     async getGroup(req, res) {
         const group = await groups_service_1.groupService.getGroupById(req.params.id, req.user.orgId);
-        // Map to the format the frontend expects
         const mappedGroup = {
             ...group,
             memberships: group.users,

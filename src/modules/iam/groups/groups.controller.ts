@@ -10,7 +10,6 @@ class GroupController {
   }
 
   async listGroups(req: Request, res: Response): Promise<void> {
-    // Validate query string
     const query = groupQuerySchema.parse(req.query) as GroupQueryDto;
     
     const result = await groupService.listGroups(req.user!.orgId, query);
@@ -44,7 +43,6 @@ class GroupController {
   async getGroup(req: Request, res: Response): Promise<void> {
     const group = await groupService.getGroupById(req.params.id as string, req.user!.orgId);
     
-    // Map to the format the frontend expects
     const mappedGroup = {
       ...group,
       memberships: (group as any).users,

@@ -10,10 +10,8 @@ const logger_1 = require("./shared/utils/logger");
 const PORT = env_1.env.PORT || 3000;
 async function startServer() {
     try {
-        // Connect to database
         await client_1.prisma.$connect();
         logger_1.logger.info('Connected to PostgreSQL via Prisma');
-        // Start server
         app_1.default.listen(PORT, () => {
             logger_1.logger.info(`Server is running on port ${PORT} in ${env_1.env.NODE_ENV} mode`);
         });
@@ -24,7 +22,6 @@ async function startServer() {
     }
 }
 startServer();
-// Handle graceful shutdown
 const gracefulShutdown = async () => {
     logger_1.logger.info('Shutting down gracefully...');
     await client_1.prisma.$disconnect();

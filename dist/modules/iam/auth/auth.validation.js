@@ -6,6 +6,7 @@ exports.registerSchema = zod_1.z.object({
     name: zod_1.z.string().trim().min(1, 'Name is required'),
     email: zod_1.z.string().trim().toLowerCase().email('Invalid email format'),
     password: zod_1.z.string().min(8, 'Password must be at least 8 characters long'),
+    registrationType: zod_1.z.enum(['ROOT', 'NORMAL']).default('ROOT'),
     organizationName: zod_1.z.string().trim().min(1, 'Organization name is required'),
 });
 exports.loginSchema = zod_1.z.object({

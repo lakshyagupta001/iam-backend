@@ -9,23 +9,39 @@ const tokens_1 = require("../../../shared/utils/tokens");
 const env_1 = require("../../../shared/config/env");
 class AuthService {
     async register(data) {
-        const existingOrg = await auth_repository_1.authRepository.findOrganizationByName(data.organizationName);
-        if (existingOrg) {
-            throw new AppError_1.AppError(409, 'This organization has already been initialized. Please contact your organization\'s administrator for access.');
-        }
         const existingUser = await auth_repository_1.authRepository.findUserByEmail(data.email);
         if (existingUser) {
             throw new AppError_1.AppError(409, 'Email already in use');
         }
-        const newOrg = await auth_repository_1.authRepository.createOrganization(data.organizationName);
-        const hashedPassword = await (0, password_1.hashPassword)(data.password);
-        await auth_repository_1.authRepository.createUser({
-            name: data.name,
-            email: data.email,
-            passwordHash: hashedPassword,
-            isRoot: true, // First user is always Root
-            organizationId: newOrg.id,
-        });
+        if (data.registrationType === 'NORMAL') {
+            const existingOrg = await auth_repository_1.authRepository.findOrganizationByName(data.organizationName);
+            if (!existingOrg) {
+                throw new AppError_1.AppError(404, 'Organization not found. Please check the organization name.');
+            }
+            const hashedPassword = await (0, password_1.hashPassword)(data.password);
+            await auth_repository_1.authRepository.createUser({
+                name: data.name,
+                email: data.email,
+                passwordHash: hashedPassword,
+                isRoot: false,
+                organizationId: existingOrg.id,
+            });
+        }
+        else {
+            const existingOrg = await auth_repository_1.authRepository.findOrganizationByName(data.organizationName);
+            if (existingOrg) {
+                throw new AppError_1.AppError(409, 'This organization has already been initialized. Please contact your organization\'s administrator for access.');
+            }
+            const newOrg = await auth_repository_1.authRepository.createOrganization(data.organizationName);
+            const hashedPassword = await (0, password_1.hashPassword)(data.password);
+            await auth_repository_1.authRepository.createUser({
+                name: data.name,
+                email: data.email,
+                passwordHash: hashedPassword,
+                isRoot: true,
+                organizationId: newOrg.id,
+            });
+        }
     }
     async login(data) {
         const user = await auth_repository_1.authRepository.findUserByEmail(data.email);

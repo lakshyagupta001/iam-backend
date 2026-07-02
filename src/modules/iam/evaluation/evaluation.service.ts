@@ -3,12 +3,7 @@ import { permissionRepository } from './evaluation.repository';
 import { IamAction, IAM_ACTIONS } from '../shared/iam.constants';
 
 class PermissionService {
-  /**
-   * Core logic to evaluate a list of statements against a single requested action.
-   * - Evaluates Explicit Deny first (always wins).
-   * - If no deny, searches for an Explicit Allow.
-   * - If no allow, implicitly denies (returns false).
-   */
+  // Evaluates statements: Explicit Deny -> Explicit Allow -> Implicit Deny.
   public evaluateStatements(statements: PolicyStatement[], action: IamAction): boolean {
     // 1. Check for Explicit Deny
     const hasDeny = statements.some(
@@ -36,10 +31,7 @@ class PermissionService {
     return false;
   }
 
-  /**
-   * Determines if a user can perform a specific action, considering policies and boundaries.
-   * Returns a boolean. This is the single source of truth for authorization.
-   */
+  // Single source of truth for authorization. Evaluates policies and boundaries.
   public async canPerformAction(userId: string, action: IamAction): Promise<boolean> {
     const data = await permissionRepository.getEvaluationData(userId);
 
@@ -78,10 +70,7 @@ class PermissionService {
     return true;
   }
 
-  /**
-   * Computes a full summary of permissions for a user across all known actions.
-   * This is useful for returning the "Effective Permissions Summary" to the frontend.
-   */
+  // Computes Effective Permissions Summary for all actions.
   public async getEffectivePermissions(userId: string): Promise<Record<IamAction, boolean>> {
     const data = await permissionRepository.getEvaluationData(userId);
     
@@ -126,8 +115,7 @@ class PermissionService {
   }
 
   private logEvaluation(userId: string, action: string, decision: 'ALLOWED' | 'DENIED', reason: string) {
-    // Avoid logging sensitive data, just standard eval result
-    // In production, this would go to a proper logger (Winston, Pino, etc.)
+    // Log standard eval result. Use proper logger in production.
     // console.log(`[PermissionEngine] User: ${userId} | Action: ${action} | Decision: ${decision} | Reason: ${reason}`);
   }
 }

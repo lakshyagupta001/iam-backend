@@ -4,12 +4,7 @@ exports.permissionService = void 0;
 const evaluation_repository_1 = require("./evaluation.repository");
 const iam_constants_1 = require("../shared/iam.constants");
 class PermissionService {
-    /**
-     * Core logic to evaluate a list of statements against a single requested action.
-     * - Evaluates Explicit Deny first (always wins).
-     * - If no deny, searches for an Explicit Allow.
-     * - If no allow, implicitly denies (returns false).
-     */
+    // Evaluates statements: Explicit Deny -> Explicit Allow -> Implicit Deny.
     evaluateStatements(statements, action) {
         // 1. Check for Explicit Deny
         const hasDeny = statements.some((stmt) => stmt.effect === 'DENY' &&
@@ -26,10 +21,7 @@ class PermissionService {
         // 3. Implicit Deny (no allow found)
         return false;
     }
-    /**
-     * Determines if a user can perform a specific action, considering policies and boundaries.
-     * Returns a boolean. This is the single source of truth for authorization.
-     */
+    // Single source of truth for authorization. Evaluates policies and boundaries.
     async canPerformAction(userId, action) {
         const data = await evaluation_repository_1.permissionRepository.getEvaluationData(userId);
         // If user not found, or any issue fetching, fail gracefully (deny)
@@ -60,10 +52,7 @@ class PermissionService {
         this.logEvaluation(userId, action, 'ALLOWED', 'Allowed by policies and boundary');
         return true;
     }
-    /**
-     * Computes a full summary of permissions for a user across all known actions.
-     * This is useful for returning the "Effective Permissions Summary" to the frontend.
-     */
+    // Computes Effective Permissions Summary for all actions.
     async getEffectivePermissions(userId) {
         const data = await evaluation_repository_1.permissionRepository.getEvaluationData(userId);
         // Initialize summary with false for all actions
@@ -99,8 +88,7 @@ class PermissionService {
         return summary;
     }
     logEvaluation(userId, action, decision, reason) {
-        // Avoid logging sensitive data, just standard eval result
-        // In production, this would go to a proper logger (Winston, Pino, etc.)
+        // Log standard eval result. Use proper logger in production.
         // console.log(`[PermissionEngine] User: ${userId} | Action: ${action} | Decision: ${decision} | Reason: ${reason}`);
     }
 }

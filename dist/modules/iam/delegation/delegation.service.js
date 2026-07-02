@@ -7,38 +7,13 @@ const logger_1 = require("../../../shared/utils/logger");
 const evaluation_service_1 = require("../evaluation/evaluation.service");
 const policies_repository_1 = require("../policies/policies.repository");
 const iam_constants_1 = require("../shared/iam.constants");
-// ──────────────────────────────────────────────────────────────────────────────
 // Delegation Bypass Prevention Service
-//
-// Enforces the following security invariant:
-//   "A user may never grant an Allow permission they do not currently possess."
-//
-// This service is intentionally decoupled from IAM middleware. IAM middleware
-// checks whether the requester is allowed to call the endpoint (e.g. iam:CreatePolicy).
-// This service checks whether the permissions *contained inside* the policy being
-// written are permissions the requester already holds themselves.
-//
-// Both checks must pass independently. This service is the only place this check
-// runs — never duplicate this logic in controllers or repositories.
-//
-// PRD references: §6.2 Delegation Bypass Prevention, §7 (Functional Requirements).
-// ──────────────────────────────────────────────────────────────────────────────
+// Enforces that a user cannot grant an Allow permission they do not possess.
 const DBP_ERROR_MESSAGE = 'Delegation Bypass Prevention: You cannot grant permissions you do not currently possess.';
 class DelegationBypassService {
-    // ────────────────────────────────────────────────────────────────────────────
-    // Core validation — single source of truth for the DBP algorithm
-    // ────────────────────────────────────────────────────────────────────────────
-    /**
-     * Iterates over every statement in the provided list.
-     * For each statement with Effect = ALLOW, checks whether the requesting user
-     * holds every action listed in that statement.
-     *
-     * Per PRD §6.2: "this check applies only to Allow statements, not Deny —
-     * denying an action you can't perform isn't privilege escalation."
-     *
-     * Throws AppError(403) on the FIRST action that fails.
-     * Returns void on success (all Allow actions are held by the requester).
-     */
+    // Core validation for DBP algorithm
+    // Checks if the requesting user holds all actions listed in Allow statements.
+    // Throws AppError(403) on failure.
     async checkAllowStatements(requestingUserId, statements, ctx) {
         for (const statement of statements) {
             // Only validate Allow statements — Deny statements do not escalate privilege
@@ -68,11 +43,7 @@ class DelegationBypassService {
             result: 'ALLOWED',
         });
     }
-    /**
-     * Synchronous version of checkAllowStatements used for in-memory filtering.
-     * Assumes the caller has already computed the user's effective permissions.
-     * Returns true if the statements can be delegated, false otherwise.
-     */
+    // Synchronous check used for in-memory filtering.
     checkAllowStatementsSync(effectivePerms, statements) {
         for (const statement of statements) {
             if (statement.effect !== client_1.Effect.ALLOW) {
@@ -94,12 +65,8 @@ class DelegationBypassService {
         }
         return true;
     }
-    // ────────────────────────────────────────────────────────────────────────────
-    // Public entry points — one per protected operation
-    // ────────────────────────────────────────────────────────────────────────────
-    /**
-     * Called by PolicyService.createPolicy() before any persistence.
-     */
+    // Public entry points
+    // Validates before policy creation.
     async validateForPolicyCreate(requestingUserId, policyName, statements) {
         await this.checkAllowStatements(requestingUserId, statements, {
             requestingUserId,
@@ -107,10 +74,7 @@ class DelegationBypassService {
             policyName,
         });
     }
-    /**
-     * Called by PolicyService.updatePolicy() before persisting new statements.
-     * Only runs if the update payload includes statements (name-only updates skip DBP).
-     */
+    // Validates before updating policy statements.
     async validateForPolicyUpdate(requestingUserId, policyId, policyName, statements) {
         await this.checkAllowStatements(requestingUserId, statements, {
             requestingUserId,
@@ -119,10 +83,7 @@ class DelegationBypassService {
             policyName,
         });
     }
-    /**
-     * Called by UsersService.attachPolicy() before creating the attachment row.
-     * Loads the policy's current statements from the DB, then validates.
-     */
+    // Validates before attaching a policy to a user.
     async validateForUserPolicyAttachment(requestingUserId, policyId, organizationId) {
         const policy = await policies_repository_1.policyRepository.findPolicyById(policyId, organizationId);
         if (!policy) {
@@ -143,10 +104,7 @@ class DelegationBypassService {
             policyName: policy.name,
         });
     }
-    /**
-     * Called by GroupService.attachPolicy() before creating the attachment row.
-     * Loads the policy's current statements from the DB, then validates.
-     */
+    // Validates before attaching a policy to a group.
     async validateForGroupPolicyAttachment(requestingUserId, policyId, organizationId) {
         const policy = await policies_repository_1.policyRepository.findPolicyById(policyId, organizationId);
         if (!policy) {

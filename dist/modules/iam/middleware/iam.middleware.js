@@ -3,24 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.iamCheck = void 0;
 const evaluation_service_1 = require("../evaluation/evaluation.service");
 const logger_1 = require("../../../shared/utils/logger");
-/**
- * IAM Authorization Middleware Factory.
- *
- * Returns a middleware that delegates the authorization decision entirely to the
- * existing Permission Evaluation Service. The middleware itself contains NO
- * evaluation logic — it is a thin adapter between Express and the evaluator.
- *
- * Usage in routes:
- *   router.post('/', authMiddleware, iamCheck('iam:CreatePolicy'), asyncHandler(controller.create));
- *
- * Flow:
- *   1. Asserts auth has already run (req.user must exist).
- *   2. Root users are fast-pathed to next() — the service handles this, but we
- *      short-circuit here to avoid a DB round-trip and log it clearly.
- *   3. Calls permissionService.canPerformAction(userId, action).
- *   4. Allowed → next().
- *   5. Denied → 403 with a consistent JSON error body.
- */
+// IAM Authorization Middleware Factory.
+// Delegates authorization to Permission Evaluation Service.
 const iamCheck = (actions) => {
     return async (req, res, next) => {
         // Guard: auth middleware must have already run and attached req.user
@@ -35,7 +19,7 @@ const iamCheck = (actions) => {
         const { id: userId, isRoot } = req.user;
         const route = `${req.method} ${req.originalUrl}`;
         const actionList = Array.isArray(actions) ? actions : [actions];
-        // Root users bypass the evaluation engine entirely (per PRD §5 and ARCHITECTURE §2)
+        // Root users bypass evaluation.
         if (isRoot) {
             logger_1.logger.info('[IAM] Root bypass', { userId, actions: actionList, route, result: 'ALLOWED' });
             next();
@@ -65,7 +49,7 @@ const iamCheck = (actions) => {
             next();
         }
         catch (error) {
-            // If the permission service fails for any reason, deny by default (fail-closed)
+            // Deny by default on unexpected error.
             logger_1.logger.error('[IAM] Permission evaluation threw an unexpected error — denying by default', {
                 userId,
                 actions: actionList,

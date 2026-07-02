@@ -45,7 +45,7 @@ class PolicyService {
         if (existing) {
             throw new AppError_1.AppError(409, `A policy named '${data.name}' already exists`);
         }
-        // DBP: requester must hold every Allow action they are trying to grant
+        // Validate requester holds all Allow actions.
         await delegation_service_1.delegationBypassService.validateForPolicyCreate(requestingUserId, data.name, data.statements);
         const created = await policies_repository_1.policyRepository.createPolicy(data.name, data.description, data.type, organizationId, data.statements.map(s => ({
             effect: s.effect,
@@ -82,7 +82,7 @@ class PolicyService {
             });
             return { totalItems, policies };
         }
-        // For non-root users, filter out policies they cannot delegate (DBP check)
+        // Filter out non-delegatable policies.
         const { permissionService } = await Promise.resolve().then(() => __importStar(require('../evaluation/evaluation.service')));
         const effectivePerms = await permissionService.getEffectivePermissions(requestingUserId);
         const allPolicies = await policies_repository_1.policyRepository.findManyWithStatements(organizationId, { search, type });
@@ -102,7 +102,7 @@ class PolicyService {
         });
         // Apply pagination in memory
         const paginatedPolicies = delegatablePolicies.slice(skip, skip + limit);
-        // Remove statements before returning to match the original return type if needed
+        // Remove statements before returning.
         const policies = paginatedPolicies.map(p => {
             const { statements, ...rest } = p;
             return rest;
@@ -127,7 +127,7 @@ class PolicyService {
                 throw new AppError_1.AppError(409, `A policy named '${data.name}' already exists`);
             }
         }
-        // DBP: only run when statements are being changed (name-only updates do not alter grants)
+        // Validate statements if changed.
         if (data.statements && data.statements.length > 0) {
             await delegation_service_1.delegationBypassService.validateForPolicyUpdate(requestingUserId, id, data.name ?? policy.name, data.statements);
         }

@@ -1,19 +1,10 @@
 import { Request, Response } from 'express';
 import { boundaryService } from './boundaries.service';
 
-// ──────────────────────────────────────────────────────────────────────────────
 // Boundary Controller
-//
-// Thin HTTP adapter. Parses the request, delegates to BoundaryService, shapes
-// the response. Contains zero business logic.
-// ──────────────────────────────────────────────────────────────────────────────
 
 class BoundaryController {
-  /**
-   * PUT /api/iam/users/:id/boundary
-   * Assigns or replaces the Permission Boundary for the target user.
-   * Root-only (enforced at route level via requireRoot).
-   */
+  // Assigns or replaces a boundary. Root-only.
   async assignBoundary(req: Request, res: Response): Promise<void> {
     const targetUserId = req.params.id as string;
     const { policyId } = req.body;
@@ -32,11 +23,7 @@ class BoundaryController {
     });
   }
 
-  /**
-   * GET /api/iam/users/:id/boundary
-   * Returns the current boundary policy (or null if none is set).
-   * Protected by iamCheck('iam:GetUser').
-   */
+  // Gets current boundary policy.
   async getBoundary(req: Request, res: Response): Promise<void> {
     const targetUserId = req.params.id as string;
 
@@ -48,11 +35,7 @@ class BoundaryController {
     });
   }
 
-  /**
-   * DELETE /api/iam/users/:id/boundary
-   * Removes the boundary from the target user.
-   * Root-only (enforced at route level via requireRoot).
-   */
+  // Removes boundary. Root-only.
   async removeBoundary(req: Request, res: Response): Promise<void> {
     const targetUserId = req.params.id as string;
 
