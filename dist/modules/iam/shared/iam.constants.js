@@ -5,7 +5,7 @@ exports.IAM_ACTIONS = [
     // Reports
     'reports:List', 'reports:Read', 'reports:Create', 'reports:Update', 'reports:Delete',
     // Alerts
-    'alerts:List', 'alerts:Read', 'alerts:Create', 'alerts:Update', 'alerts:Acknowledge', 'alerts:Delete',
+    'alerts:List', 'alerts:Read', 'alerts:Create', 'alerts:Acknowledge', 'alerts:Delete',
     // Settings
     'settings:Read', 'settings:Update',
     // Audit

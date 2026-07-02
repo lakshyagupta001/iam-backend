@@ -24,10 +24,10 @@ exports.alertsController = {
         const alert = await alerts_service_1.alertsService.createAlert(organizationId, req.body);
         res.status(201).json({ success: true, data: alert });
     },
-    async update(req, res) {
+    async acknowledge(req, res) {
         const { orgId: organizationId } = req.user;
         const { id } = req.params;
-        const alert = await alerts_service_1.alertsService.updateAlert(organizationId, id, req.body);
+        const alert = await alerts_service_1.alertsService.acknowledgeAlert(organizationId, id);
         res.json({ success: true, data: alert });
     },
     async delete(req, res) {

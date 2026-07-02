@@ -10,7 +10,7 @@ export const reportsRoutes = Router();
 
 reportsRoutes.use(authMiddleware);
 
-reportsRoutes.get('/', iamCheck('reports:Read'), asyncHandler(reportsController.list));
+reportsRoutes.get('/', iamCheck('reports:List'), asyncHandler(reportsController.list));
 reportsRoutes.get('/:id', iamCheck('reports:Read'), asyncHandler(reportsController.get));
 reportsRoutes.post('/', iamCheck('reports:Create'), validate(createReportSchema), asyncHandler(reportsController.create));
 reportsRoutes.put('/:id', iamCheck('reports:Update'), validate(updateReportSchema), asyncHandler(reportsController.update));

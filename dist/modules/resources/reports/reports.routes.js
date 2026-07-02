@@ -13,7 +13,7 @@ const iam_middleware_1 = require("../../iam/middleware/iam.middleware");
 const reports_validation_1 = require("./reports.validation");
 exports.reportsRoutes = (0, express_1.Router)();
 exports.reportsRoutes.use(auth_middleware_1.authMiddleware);
-exports.reportsRoutes.get('/', (0, iam_middleware_1.iamCheck)('reports:Read'), (0, express_async_handler_1.default)(reports_controller_1.reportsController.list));
+exports.reportsRoutes.get('/', (0, iam_middleware_1.iamCheck)('reports:List'), (0, express_async_handler_1.default)(reports_controller_1.reportsController.list));
 exports.reportsRoutes.get('/:id', (0, iam_middleware_1.iamCheck)('reports:Read'), (0, express_async_handler_1.default)(reports_controller_1.reportsController.get));
 exports.reportsRoutes.post('/', (0, iam_middleware_1.iamCheck)('reports:Create'), (0, validate_middleware_1.validate)(reports_validation_1.createReportSchema), (0, express_async_handler_1.default)(reports_controller_1.reportsController.create));
 exports.reportsRoutes.put('/:id', (0, iam_middleware_1.iamCheck)('reports:Update'), (0, validate_middleware_1.validate)(reports_validation_1.updateReportSchema), (0, express_async_handler_1.default)(reports_controller_1.reportsController.update));

@@ -13,13 +13,13 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users       User[]
-  groups      Group[]
-  policies    Policy[]
-  reports     Report[]
-  alerts      Alert[]
-  settings    Setting[]
-  auditLogs   AuditLog[]
+  users     User[]
+  groups    Group[]
+  policies  Policy[]
+  reports   Report[]
+  alerts    Alert[]
+  settings  Setting[]
+  auditLogs AuditLog[]
 }
 
 model User {
@@ -102,11 +102,11 @@ model Policy {
 }
 
 model PolicyStatement {
-  id        String   @id @default(uuid())
-  policyId  String
-  effect    Effect
-  actions   String[] // e.g. ["user:create", "user:read"]
-  resource  String   // e.g. "*"
+  id       String   @id @default(uuid())
+  policyId String
+  effect   Effect
+  actions  String[] // e.g. ["user:create", "user:read"]
+  resource String // e.g. "*"
 
   policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
 
@@ -168,19 +168,23 @@ model Report {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId])
 }
 
 model Alert {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   title          String
   message        String
   severity       String
   organizationId String
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
+  isAcknowledged Boolean   @default(false)
+  acknowledgedAt DateTime?
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId])
 }
 
@@ -191,7 +195,8 @@ model Setting {
   organizationId String
   updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([key, organizationId])
 }
 
@@ -202,6 +207,7 @@ model AuditLog {
   organizationId String
   timestamp      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId])
 }

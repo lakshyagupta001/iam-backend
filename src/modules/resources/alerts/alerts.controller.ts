@@ -26,10 +26,10 @@ export const alertsController = {
     res.status(201).json({ success: true, data: alert });
   },
 
-  async update(req: Request, res: Response) {
+  async acknowledge(req: Request, res: Response) {
     const { orgId: organizationId } = req.user!;
     const { id } = req.params;
-    const alert = await alertsService.updateAlert(organizationId, id as string, req.body);
+    const alert = await alertsService.acknowledgeAlert(organizationId, id as string);
     res.json({ success: true, data: alert });
   },
 

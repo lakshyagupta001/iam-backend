@@ -88,7 +88,7 @@ const POLICY_DEFINITIONS: PolicyDef[] = [
     description: 'Full access to all alert operations.',
     type: PolicyType.MANAGED,
     statements: [
-      { effect: Effect.ALLOW, actions: ['alerts:List', 'alerts:Read', 'alerts:Create', 'alerts:Update', 'alerts:Acknowledge', 'alerts:Delete'], resource: '*' },
+      { effect: Effect.ALLOW, actions: ['alerts:List', 'alerts:Read', 'alerts:Create', 'alerts:Acknowledge', 'alerts:Delete'], resource: '*' },
     ],
   },
   // ── Audit ────────────────────────────────────────────────────────────────

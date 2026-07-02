@@ -28,14 +28,18 @@ export const alertsService = {
     });
   },
 
-  async updateAlert(organizationId: string, id: string, data: { title?: string; message?: string; severity?: string }) {
+  async acknowledgeAlert(organizationId: string, id: string) {
     const alert = await alertsRepository.findUnique(id, organizationId);
 
     if (!alert) {
       throw new AppError(404, 'Alert not found');
     }
 
-    return alertsRepository.update(id, data);
+    if (alert.isAcknowledged) {
+      return alert;
+    }
+
+    return alertsRepository.update(id, { isAcknowledged: true, acknowledgedAt: new Date() });
   },
 
   async deleteAlert(organizationId: string, id: string) {

@@ -25,12 +25,15 @@ exports.alertsService = {
             organizationId,
         });
     },
-    async updateAlert(organizationId, id, data) {
+    async acknowledgeAlert(organizationId, id) {
         const alert = await alerts_repository_1.alertsRepository.findUnique(id, organizationId);
         if (!alert) {
             throw new AppError_1.AppError(404, 'Alert not found');
         }
-        return alerts_repository_1.alertsRepository.update(id, data);
+        if (alert.isAcknowledged) {
+            return alert;
+        }
+        return alerts_repository_1.alertsRepository.update(id, { isAcknowledged: true, acknowledgedAt: new Date() });
     },
     async deleteAlert(organizationId, id) {
         const alert = await alerts_repository_1.alertsRepository.findUnique(id, organizationId);
